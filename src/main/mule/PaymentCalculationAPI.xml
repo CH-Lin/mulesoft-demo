@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:java="http://www.mulesoft.org/schema/mule/java"
+	xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd">
+	<flow name="PaymentCalculationAPI"
+		doc:id="16e5ff32-f3d9-4b26-b6c3-c103ec0eac31">
+		<http:listener doc:name="Listener"
+			doc:id="3c466546-d03c-4d5e-81c6-a3c135a43f0f"
+			config-ref="Experience_HTTP_Listener_config"
+			path="/payment/calculate" allowedMethods="GET">
+			<http:response>
+				<http:headers><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "application/json"
+}]]]></http:headers>
+			</http:response>
+		</http:listener>
+		<http:request method="GET" doc:name="Request"
+			doc:id="b6f8e5b0-da41-425f-b839-f354d72ef147"
+			config-ref="HTTP_Process_Request_configuration"
+			path="/get/reimbursement" />
+		<set-variable value="#[payload]" doc:name="Set Variable"
+			doc:id="0cc9ee6c-4db9-41fc-8fc6-f9e3b229bb6a"
+			variableName="reimbursementInfo" />
+		<logger level="INFO" doc:name="Logger"
+			doc:id="f0b1d0b6-d9b5-4593-824b-345d4056226e"
+			message="#[vars.reimbursementInfo]" />
+		<http:request method="GET" doc:name="Request"
+			doc:id="f51d70ef-234a-4902-b0de-a06b08f7bdaf"
+			config-ref="HTTP_Process_Request_configuration" path="/get/salary" />
+		<set-variable value="#[payload]"
+			doc:name="Set salaryInfo"
+			doc:id="dd701421-2fea-4427-98a6-0fd4e132af32"
+			variableName="salaryInfo" />
+		<logger level="INFO" doc:name="Logger"
+			doc:id="9eac009a-812f-4c9c-b803-879a618caab0"
+			message="#[vars.salaryInfo]" />
+		<java:invoke-static
+			method="process(java.lang.String,java.lang.String,java.lang.Integer,java.lang.Integer)"
+			doc:name="ProcessAllReportRecords"
+			doc:id="31880955-5179-41f1-b88c-865075be59f1"
+			class="com.demo.payment.PaymentProcessor">
+			<java:args><![CDATA[#[{
+	salariesStr: vars.salaryInfo,
+	reimbursementsStr: vars.reimbursementInfo,
+	year: now().year,
+	month: now().month
+}]]]></java:args>
+		</java:invoke-static>
+		<set-payload
+			value="#[output application/json&#10;---&#10;payload]"
+			doc:name="Set Payload" doc:id="7620a715-81e2-4411-8828-d3c9695c81e2" />
+	</flow>
+</mule>

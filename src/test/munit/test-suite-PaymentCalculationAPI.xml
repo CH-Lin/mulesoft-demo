@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config
+		name="test-suite-ReimbursementInformation.xml" />
+	<munit:test name="GetReimbursementInfo"
+		doc:id="df344116-732a-4f3b-bd90-46246b484e21" description="Test">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="646bb771-c9af-4959-989f-02cf4544efcf"
+				processor="http:listener">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/payment/calculate" attributeName="path" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when /get/reimbursement"
+				doc:id="a6948dde-fd30-4820-a0db-4a0943f8a2c0"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/get/reimbursement" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload
+						value='#["[{\"year\":2021,\"month\":8,\"employeeName\":\"Emma\",\"employeeEmail\":\"emma@company.com\",\"amount\":2100},{\"year\":2021,\"month\":8,\"employeeName\":\"Emma\",\"employeeEmail\":\"emma@company.com\",\"amount\":5210},{\"year\":2021,\"month\":8,\"employeeName\":\"John\",\"employeeEmail\":\"john@company.com\",\"amount\":2000},{\"year\":2021,\"month\":8,\"employeeName\":\"Emma\",\"employeeEmail\":\"emma@company.com\",\"amount\":3500}]"]' />
+				</munit-tools:then-return>
+
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when /get/salary/all"
+				doc:id="eaf30e9a-781c-4272-8239-71a6082da78f"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/get/salary" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload
+						value='#["[{\"employeeName\":\"John\",\"employeeEmail\":\"john@company.com\",\"salary\":1200000},{\"employeeName\":\"Emma\",\"employeeEmail\":\"emma@company.com\",\"salary\":1200000}]"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="PaymentCalculationAPI"
+				doc:id="7a20c3aa-0920-40f2-9abc-8a3f15842809"
+				name="PaymentCalculationAPI" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that
+				doc:name="Assert that" doc:id="6c39145c-ea9f-4e20-b2c1-007c1dd4b60f"
+				expression="#[payload[0].amount]"
+				is="#[MunitTools::equalTo(1202000)]" />
+			<munit-tools:assert-that
+				doc:name="Assert that" doc:id="b48d1c59-395f-4adb-a1e3-6ab75caa5e96"
+				expression="#[payload[1].amount]"
+				is="#[MunitTools::equalTo(1210810)]" />
+		</munit:validation>
+
+	</munit:test>
+	<munit:test name="GetReimbursementInfoError"
+		doc:id="be8b04b4-8df6-4003-913d-eb6b89e5668a" description="Test"
+		expectedErrorType="HTTP:CONNECTIVITY">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="d1c4a49c-5ae0-4e41-a8bd-0c40df647d57"
+				processor="http:listener">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/payment/calculate" attributeName="path" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when /get/reimbursement"
+				doc:id="e6470e29-a568-4180-9e4e-bb3203816911"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/get/reimbursement" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:error
+						typeId="#['HTTP:CONNECTIVITY']" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="PaymentCalculationAPI"
+				doc:id="1eb5b655-4c01-4c15-80a9-38a1e884592e"
+				name="PaymentCalculationAPI" />
+		</munit:execution>
+	</munit:test>
+	<munit:test name="GetSalaryInfoError"
+		doc:id="a81a7c7c-9cb3-43eb-ac3d-4e92ea04431a" description="Test"
+		expectedErrorType="HTTP:CONNECTIVITY">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="3e5c5f16-fb5c-4efb-be65-3e2a79359bbc"
+				processor="http:listener">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/payment/calculate" attributeName="path" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when /get/reimbursement"
+				doc:id="7bf3df4c-40eb-4614-9696-eeb70f7a0081"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/get/reimbursement" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value='#["SKIP"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when /get/salary/all"
+				doc:id="babe2f3f-be53-410c-907f-b9947bcd801b"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/get/salary" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:error
+						typeId="#['HTTP:CONNECTIVITY']" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="PaymentCalculationAPI"
+				doc:id="e434ccd7-8a97-4755-a449-3117d5da89bd"
+				name="PaymentCalculationAPI" />
+		</munit:execution>
+	</munit:test>
+</mule>

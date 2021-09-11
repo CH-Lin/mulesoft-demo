@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="test-suite-PaymentEntry.xml" />
+	<munit:test name="PaymentExperienceTest"
+		doc:id="b80f53ec-3de0-44d1-a0be-9f80ffd6576f" description="Test">
+		<munit:behavior>
+			<munit-tools:mock-when
+				doc:name="Mock http request"
+				doc:id="e4d0b20d-f5b4-4fbd-adc9-1291fb432a68"
+				processor="http:listener">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/payment" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value='#["GetRequest"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when call payment request"
+				doc:id="0a8070f6-1e25-4117-87aa-3e2bf87b8910"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="HTTP_Process_Request_configuration"
+						attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload
+						value='#["Payment process successed"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="PaymentExperience"
+				doc:id="0b2fe1bd-e0ad-4e46-ab77-a13030d1a942"
+				name="PaymentExperience" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that
+				doc:name="Assert that" doc:id="51db7942-8b4f-44b4-8bc7-0309052c42af"
+				expression="#[payload]"
+				is='#[MunitTools::equalToIgnoringCase("Payment process successed")]' />
+		</munit:validation>
+	</munit:test>
+	<munit:test
+		name="PaymentExperienceTest-ERROR:SEND_PAYMENT_REQUEST_ERROR"
+		doc:id="cd3ca435-908a-40b9-a0c3-d315364c450e" description="Test">
+		<munit:behavior>
+			<munit-tools:mock-when
+				doc:name="Mock http request"
+				doc:id="cf653181-0cb1-4add-90bc-c3146cc3fd81"
+				processor="http:listener">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/payment" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value='#["GetRequest"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when call payment request"
+				doc:id="910830ed-9b69-445b-9119-f6ae8190f51c"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="HTTP_Process_Request_configuration"
+						attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:error
+						typeId="ERROR:SEND_PAYMENT_REQUEST_ERROR" />
+				</munit-tools:then-return>
+
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="PaymentExperience"
+				doc:id="f2cdf75d-6731-42fa-8902-af10cddf8915"
+				name="PaymentExperience" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that
+				doc:name="Assert that" doc:id="d516523f-8604-4b81-9641-fb9571897e61"
+				expression="#[payload]"
+				is='#[MunitTools::equalToIgnoringCase("ERROR:SEND_PAYMENT_REQUEST_ERROR")]' />
+		</munit:validation>
+	</munit:test>
+	<munit:test
+		name="PaymentExperienceTest-ERROR:GET_REIMBURSEMENT_INFO"
+		doc:id="0c82e14a-90cc-4163-86b7-a634209a5876" description="Test">
+		<munit:behavior>
+			<munit-tools:mock-when
+				doc:name="Mock http request"
+				doc:id="55f49a65-7890-4f00-a5fc-b913a1538796"
+				processor="http:listener">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/payment" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value='#["GetRequest"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when call payment request"
+				doc:id="880da795-0092-476e-af0c-40dbf84bd6b9"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="HTTP_Process_Request_configuration"
+						attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:error
+						typeId="ERROR:GET_REIMBURSEMENT_INFO" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="PaymentExperience"
+				doc:id="35da673e-eb77-47d9-b5fe-76e2e5a9fe3d"
+				name="PaymentExperience" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that
+				doc:name="Assert that" doc:id="a15a6298-0cfe-41eb-ad1f-d4a29de9177d"
+				expression="#[payload]"
+				is='#[MunitTools::equalToIgnoringCase("ERROR:GET_REIMBURSEMENT_INFO")]' />
+		</munit:validation>
+	</munit:test>
+	<munit:test
+		name="PaymentExperienceTest-ERROR:GET_SALARY_INFO"
+		doc:id="c0b61dc6-a21f-4c57-91cc-92becb377022" description="Test">
+		<munit:behavior>
+			<munit-tools:mock-when
+				doc:name="Mock http request"
+				doc:id="d89cba59-fd90-4e47-855f-d3bccc26f7c8"
+				processor="http:listener">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/payment" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value='#["GetRequest"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when call payment request"
+				doc:id="231cef08-a2d4-4959-96b8-0da2a774db73"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="HTTP_Process_Request_configuration"
+						attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:error typeId="ERROR:GET_SALARY_INFO" />
+				</munit-tools:then-return>
+
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="PaymentExperience"
+				doc:id="31018a37-451a-47cb-9424-10e00929c952"
+				name="PaymentExperience" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that
+				doc:name="Assert that" doc:id="5889084c-cd13-43c3-a12a-8fa1c6f558c3"
+				expression="#[payload]"
+				is='#[MunitTools::equalToIgnoringCase("ERROR:GET_SALARY_INFO")]' />
+		</munit:validation>
+	</munit:test>
+</mule>

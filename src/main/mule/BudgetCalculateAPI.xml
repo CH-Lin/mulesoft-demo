@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:java="http://www.mulesoft.org/schema/mule/java"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd">
+	<flow name="CalculateBudgetProcessAPIFlow"
+		doc:id="b1e84920-1f2d-48a5-a03c-edb38c6d8d90">
+		<http:listener doc:name="Listener"
+			doc:id="6bfc00e7-ede4-46c7-bd87-6c6d0746dbe5"
+			config-ref="Experience_HTTP_Listener_config" path="/budget/calculate"
+			allowedMethods="GET">
+			<http:response>
+				<http:headers><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "application/json"
+}]]]></http:headers>
+			</http:response>
+		</http:listener>
+		<http:request method="GET"
+			doc:name="Get Japan budget request"
+			doc:id="6490e68f-e60e-4f9c-8e03-2173e23cf052"
+			config-ref="HTTP_Process_Request_configuration" path="/get/budget">
+		</http:request>
+		<set-variable value="#[payload]"
+			doc:name="Set variable japanbudget"
+			doc:id="277d16a0-4ccb-45e6-973e-2a0f481dabc4"
+			variableName="japanbudget" />
+		<http:request method="GET"
+			doc:name="Get all reimbursement request"
+			doc:id="ce7a8791-80d1-4d7a-8318-ce463c8aac40"
+			config-ref="HTTP_Process_Request_configuration"
+			path="/get/all/reimbursement" />
+		<set-variable value="#[payload]"
+			doc:name="Set variable reimbursementInfo"
+			doc:id="1d3d4667-a667-464d-b9f7-06fd204ea695"
+			variableName="reimbursementInfo" />
+		<http:request method="GET"
+			doc:name="Get all salary request"
+			doc:id="e626febb-08d0-4217-8118-fb833b9c972b"
+			config-ref="HTTP_Process_Request_configuration" path="/get/salary" />
+		<set-variable value="#[payload]"
+			doc:name="Set variable salaryInfo"
+			doc:id="c61b5a8e-ab1a-47a3-ac0a-339d59ea331e"
+			variableName="salaryInfo" />
+		<java:invoke-static doc:name="Invoke static"
+			doc:id="5598de06-34fe-46f1-9cb8-eec9a4b4aa7b"
+			class="com.demo.budget.BudgetProcessor"
+			method="process(java.lang.String,java.lang.String,java.lang.String)">
+			<java:args><![CDATA[#[{
+	salariesStr: vars.salaryInfo,
+	reimbursementsStr: vars.reimbursementInfo,
+	budgetStr: vars.japanbudget
+}]]]></java:args>
+		</java:invoke-static>
+		<logger level="INFO" doc:name="Logger"
+			doc:id="5decbdd0-53ec-414c-9608-c74388a2f747" message="#[payload]" />
+		<set-payload
+			value="#[output application/json&#10;---&#10;payload]"
+			doc:name="Set Payload" doc:id="1dbc5796-2741-4689-94ff-f5092a066e98" />
+	</flow>
+</mule>

@@ -1,0 +1,413 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="test-suite-SystemAPI.xml" />
+	<munit:test name="GetReimbursementSyatemAPITest"
+		doc:id="d53f3915-7996-4969-945d-083070d29446" description="Test">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="12b432be-c168-415c-9ddb-36d39f625d95"
+				processor="http:listener">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/get/reimbursement" attributeName="path" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="2dec47a1-5ba3-40c6-9f5c-cefb3e2aa3b2"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/get/reimbursement" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value='#["SUCCESSED"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="GetReimbursementSyatemAPI"
+				doc:id="26f2d7c3-c32f-40b8-a5b3-4a9f3b76635b"
+				name="GetReimbursementSyatemAPI" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that
+				doc:name="Assert that" doc:id="9d967278-d085-40b2-9643-c336b399cf48"
+				is='#[MunitTools::equalToIgnoringCase("SUCCESSED")]'
+				expression="#[payload]" />
+		</munit:validation>
+	</munit:test>
+	<munit:test
+		name="GetReimbursementSyatemAPIWithHttpErrorTest"
+		doc:id="e0764c4a-9aa4-49d6-8b41-298258e68546" description="Test"
+		expectedErrorType="ERROR:GET_REIMBURSEMENT_INFO">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="329ad848-37fa-451e-a6e2-f1ee51686853"
+				processor="http:listener">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/get/reimbursement" attributeName="path" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="b81484f9-ab82-4968-9352-bba4d2aa4a0b"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/get/reimbursement" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:error typeId="HTTP:CONNECTIVITY" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="GetReimbursementSyatemAPI"
+				doc:id="30990ad7-8158-4747-a5d0-7f199c41f1b3"
+				name="GetReimbursementSyatemAPI" />
+		</munit:execution>
+	</munit:test>
+	<munit:test name="GetAllReimbursementSyatemAPITest"
+		doc:id="2fed7162-fc06-4a5a-b2a8-365af5d2e98d">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="82a975b5-e73d-4dbc-ad90-f202bc545e8d"
+				processor="http:listener">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/get/all/reimbursement" attributeName="path" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="7b740772-e9e8-46b5-8fe0-2546ae2c0d7a"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/get/reimbursement" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value='#["SUCCESSED"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="GetAllReimbursementSyatemAPI"
+				doc:id="59c520d8-94fd-4d98-b63b-9e2fec2b5515"
+				name="GetAllReimbursementSyatemAPI" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that
+				doc:name="Assert that" doc:id="b1547951-6736-4267-bfab-2318c232d6f3"
+				is='#[MunitTools::equalToIgnoringCase("SUCCESSED")]'
+				expression="#[payload]" />
+		</munit:validation>
+	</munit:test>
+	<munit:test
+		name="GetAllReimbursementSyatemAPIWithHttpErrorTest"
+		doc:id="e8d016f9-fd4c-444b-ae9d-b60eb999eb3f"
+		expectedErrorType="ERROR:GET_REIMBURSEMENT_INFO">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="372254f6-f617-41bd-9daa-133bbf36ce1b"
+				processor="http:listener">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/get/all/reimbursement" attributeName="path" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="4f09925a-9415-4116-9209-708feb42a104"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/get/reimbursement" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:error typeId="HTTP:CONNECTIVITY" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="GetAllReimbursementSyatemAPI"
+				doc:id="56895992-9193-4fb4-9020-15f8587b0004"
+				name="GetAllReimbursementSyatemAPI" />
+		</munit:execution>
+	</munit:test>
+	<munit:test name="GetSalarySystemAPITest"
+		doc:id="a1e9355d-9f0e-46a5-b720-e81759beac5a" description="Test">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="766534d7-6fbc-4fa7-bcd2-de88c2c08bff"
+				processor="http:listener">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/get/salary" attributeName="path" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="51d2ff7c-f46f-4058-8fab-da76353f7095"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/get/salary/all" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value='#["SUCCESSED"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="GetSalarySystemAPI"
+				doc:id="bfd54467-2287-4f07-9e7b-323d1c0f0fcf"
+				name="GetSalarySystemAPI" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that
+				doc:name="Assert that" doc:id="dba3dac1-8f4a-4ff5-a77d-c52cb72c9115"
+				expression="#[payload]"
+				is='#[MunitTools::equalToIgnoringCase("SUCCESSED")]' />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="GetSalarySystemAPIWithHttpErrorTest"
+		doc:id="d121a39f-30b4-45ed-8fbb-25dbe6280a25" description="Test"
+		expectedErrorType="ERROR:GET_SALARY_INFO">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="f321faed-b8d5-4a13-bea9-3fa7e7c92eb0"
+				processor="http:listener">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/get/salary" attributeName="path" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="5bed6f50-cf29-4fe3-a7fe-9cc24d6aafec"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/get/salary/all" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:error typeId="HTTP:CONNECTIVITY" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="GetSalarySystemAPI"
+				doc:id="c3872667-eaeb-4cf1-bbd7-1f342dbca504"
+				name="GetSalarySystemAPI" />
+		</munit:execution>
+	</munit:test>
+	<munit:test name="GetJapanBudgetSystemAPITest"
+		doc:id="3069ff3d-6038-4701-96ce-616eef088746" description="Test">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="c0e75997-9d97-4e7c-9927-780c12842af8"
+				processor="http:listener">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/get/budget" attributeName="path" />
+				</munit-tools:with-attributes>
+
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="bf883edd-49ac-4b1c-9a1e-329324bc831d"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="HTTP_Request_Financial_System_JP"
+						attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value='#["SUCCESSED"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="GetJapanBudgetSystemAPI"
+				doc:id="19bc31fd-aaac-4270-ad48-d0f19c6b3957"
+				name="GetJapanBudgetSystemAPI" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that
+				doc:name="Assert that" doc:id="e9d5022f-4d57-4c8b-a6e9-7f0c23044c80"
+				expression="#[payload]"
+				is='#[MunitTools::equalToIgnoringCase("SUCCESSED")]' />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="GetJapanBudgetSystemAPIWithHttpErrorTest"
+		doc:id="312a353f-2777-4196-9153-d7b173d6ba9e" description="Test"
+		expectedErrorType="ERROR:GET_BUDGET_INFO">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="b64dcc60-7e7c-419f-aea4-f0cac0a62159"
+				processor="http:listener">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/get/budget" attributeName="path" />
+				</munit-tools:with-attributes>
+
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="39a8b257-8f9f-4fc7-9c7c-96674fe90c53"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="HTTP_Request_Financial_System_JP"
+						attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:error typeId="HTTP:CONNECTIVITY" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="GetJapanBudgetSystemAPI"
+				doc:id="7c20adf1-5042-43ad-beff-d60abfd8ef77"
+				name="GetJapanBudgetSystemAPI" />
+		</munit:execution>
+	</munit:test>
+	<munit:test name="UpdateUSABudgetSystemAPITest"
+		doc:id="35723ca5-d257-4ddf-a55a-0b24d82ed79a" description="Test">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="a30468b6-c30d-450b-940e-962c8324084f"
+				processor="http:listener">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/update/budget" attributeName="path" />
+				</munit-tools:with-attributes>
+
+
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="05336983-6cbe-447f-aa12-8b5d2a2f8adc"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="HTTP_Request_Financial_System_USA"
+						attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value='#["SUCCESSED"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="UpdateUSABudgetSystemAPI"
+				doc:id="00ac5fe3-d3ef-4230-8ed9-a7c8ba4393ed"
+				name="UpdateUSABudgetSystemAPI" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that
+				doc:name="Assert that" doc:id="56af7ea6-eaa5-4e09-8dca-9330579fb95c"
+				expression="#[payload]"
+				is='#[MunitTools::equalToIgnoringCase("SUCCESSED")]' />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="UpdateUSABudgetSystemAPIWithHttpErrorTest"
+		doc:id="d9d0853b-b25d-4849-a5cc-0985cfc6413c" description="Test"
+		expectedErrorType="ERROR:UPDATE_BUDGET_INFO">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="b25212cd-72cc-49f6-a982-c161966a3733"
+				processor="http:listener">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/update/budget" attributeName="path" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="932e4485-db84-4b27-b699-a9a300d92e2d"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/update/budget" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:error typeId="HTTP:CONNECTIVITY" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="UpdateUSABudgetSystemAPI"
+				doc:id="d1868088-2a86-4c96-887c-7d88d2f0b707"
+				name="UpdateUSABudgetSystemAPI" />
+		</munit:execution>
+	</munit:test>
+	<munit:test name="AddJapanBudgetSystemAPITest"
+		doc:id="b9517fd5-1346-42cc-a283-bfadabf1f1f7" description="Test">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="da5b459d-298b-4846-914d-87ff6d11ec42"
+				processor="http:listener">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/add/budget" attributeName="path" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="1b657c3e-40fb-46a9-94b7-9a80b2977e77"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/add/budget" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value='#["SUCCESSED"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="AddJapanBudgetSystemAPI"
+				doc:id="ffc64d59-f202-41cc-bb6b-ce9c00d77f78"
+				name="AddJapanBudgetSystemAPI" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that
+				doc:name="Assert that" doc:id="b7a589cb-f54d-46a9-ba02-7b2da9a6ffc0"
+				expression="#[payload]"
+				is='#[MunitTools::equalToIgnoringCase("SUCCESSED")]' />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="AddJapanBudgetSystemAPIWithHttpErrorTest"
+		doc:id="ddd1e45b-d852-4ec2-b82a-148c274a26da" description="Test"
+		expectedErrorType="ERROR:ADD_JAPAN_BUDGET">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="18115d67-8958-4133-9b2a-bd9dd7c9387c"
+				processor="http:listener">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/add/budget" attributeName="path" />
+				</munit-tools:with-attributes>
+
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="acdf5120-9e60-4c26-9e2d-b3649592e479"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/add/budget" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:error typeId="HTTP:CONNECTIVITY" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="AddJapanBudgetSystemAPI"
+				doc:id="56add0bf-cc74-4ca4-9783-0c27b8f9ced1"
+				name="AddJapanBudgetSystemAPI" />
+		</munit:execution>
+	</munit:test>
+</mule>

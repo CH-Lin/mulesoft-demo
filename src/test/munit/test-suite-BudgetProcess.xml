@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="test-suite-BudgetProcess.xml" />
+	<munit:test name="CalculateBudgetProcessAPIFlowTest"
+		doc:id="ed402d10-ee53-46d1-9b94-80aa77bd198d" description="Test">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="40b8603c-2efe-4bbe-b317-a1e7d7bb3ccd"
+				processor="http:listener">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/budget/calculate" attributeName="path" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="77500889-1762-418f-b013-d4ce81a641b4"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/get/budget" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value="#[10000000]" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="fd3b1be2-b8bc-4c86-8f94-c179dba7a2f3"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/get/all/reimbursement" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload
+						value='#[&#10;"[&#10;  {&#10;    \"year\": 2021,&#10;    \"month\": 6,&#10;    \"employeeName\": \"Emma\",&#10;    \"employeeEmail\": \"Che-Hung Lin &lt;chehunglin109@gmail.com&gt;\",&#10;    \"amount\": 10000&#10;  },&#10;  {&#10;    \"year\": 2021,&#10;    \"month\": 6,&#10;    \"employeeName\": \"John\",&#10;    \"employeeEmail\": \"Che-Hung Lin &lt;chehunglin109@gmail.com&gt;\",&#10;    \"amount\": 30000&#10;  }&#10;]"&#10;]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="1e9c83ba-02d9-464f-902e-b9fa82c56a07"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/get/salary" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload
+						value='#[&#10;"[&#10;  {&#10;    \"employeeName\": \"John\",&#10;    \"employeeEmail\": \"Che-Hung Lin &lt;chehunglin109@gmail.com&gt;\",&#10;    \"salary\": 1200000&#10;  },&#10;  {&#10;    \"employeeName\": \"Emma\",&#10;    \"employeeEmail\": \"Che-Hung Lin &lt;chehunglin109@gmail.com&gt;\",&#10;    \"salary\": 1200000&#10;  }&#10;]"&#10;&#10;]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="CalculateBudgetProcessAPIFlow"
+				doc:id="745393b6-40d7-4f37-a378-2f3b3c533417"
+				name="CalculateBudgetProcessAPIFlow" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that
+				doc:name="Assert that" doc:id="c6853ba9-ea98-4b82-a1cc-b2cc199fa88f"
+				is='#[MunitTools::equalTo(29200000)]' expression="#[payload]" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="BudgetUpdateAPIFlowTest"
+		doc:id="5609e264-5709-4ecb-8f2d-e9006c25702c" description="Test">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="f482a303-9b3e-4dbf-a6ba-22c602085f8e"
+				processor="http:listener">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/budget/update" attributeName="path" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="fa254979-402b-4032-a1cb-2272ea1fc6e0"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/add/budget" attributeName="path" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="a0376bdd-06e8-43ad-b79e-aceef6a3354e"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/update/budget" attributeName="path" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="BudgetUpdateAPIFlow"
+				doc:id="e8f2bb58-93c9-4e92-9b6c-b1dedf973de2"
+				name="BudgetUpdateAPIFlow" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that
+				doc:name="Assert that" doc:id="b4a8c984-6f6c-41ad-846f-fc5ad2c057b3"
+				is='#[MunitTools::equalToIgnoringWhiteSpace("Budget sync done!")]'
+				expression="#[payload]" />
+		</munit:validation>
+	</munit:test>
+</mule>

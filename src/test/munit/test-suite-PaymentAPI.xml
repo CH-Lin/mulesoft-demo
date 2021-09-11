@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="test-suite-PaymentFlow.xml" />
+	<munit:test name="PaymentFlowTest"
+		doc:id="e8f2d527-447d-4382-ab52-7dea49322b96" description="Test">
+		<munit:behavior>
+			<munit-tools:mock-when
+				doc:name="Mock when http listener"
+				doc:id="c5d42674-36f9-479b-b3cf-285e0a72b8c2"
+				processor="http:listener">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="Experience_HTTP_Listener_config"
+						attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload
+						value='#["[{\"year\":2021,\"month\":8,\"employeeName\":\"Emma\",\"employeeEmail\":\"emma@company.com\",\"amount\":2100},{\"year\":2021,\"month\":8,\"employeeName\":\"Emma\",\"employeeEmail\":\"emma@company.com\",\"amount\":5210},{\"year\":2021,\"month\":8,\"employeeName\":\"John\",\"employeeEmail\":\"john@company.com\",\"amount\":2000},{\"year\":2021,\"month\":8,\"employeeName\":\"Emma\",\"employeeEmail\":\"emma@company.com\",\"amount\":3500}]"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when /payment/calculate"
+				doc:id="80d8e830-8460-4b18-b2f7-4a6284f00033"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/payment/calculate" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload
+						value='#[[{"employeeName":"John","employeeEmail":"john@company.com","salary":1200000},{"employeeName":"Emma","employeeEmail":"emma@company.com","salary":1200000}]&#10;]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when send payment request"
+				doc:id="3d640231-23be-4265-93d7-aeeb285d508a"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="HTTP_Request_Financial_System_JP"
+						attributeName="config-ref" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when send email"
+				doc:id="0055b784-09b9-47a2-a86f-b5a0aded0fde" processor="email:send">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="Email_IAMP_Sender" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value='#["SKIP"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="PaymentAPI"
+				doc:id="23c4ffed-99e3-4c26-ae51-05cca6b30ea8" name="PaymentAPI" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that
+				doc:name="Assert that" doc:id="f2af1200-92d8-4a03-a739-5512795580f2"
+				expression="#[payload]"
+				is='#[MunitTools::equalToIgnoringCase("Payment process successed")]' />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="PaymentFlowTestWithHttpError"
+		doc:id="a34e5bc0-6c4b-436e-b332-fd9f847ea7d0" description="Test"
+		expectedErrorType="ERROR:SEND_PAYMENT_REQUEST_ERROR">
+		<munit:behavior>
+			<munit-tools:mock-when
+				doc:name="Mock when http listener"
+				doc:id="ef177a69-d0e4-44a5-9248-66ea2eb9a2f3"
+				processor="http:listener">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="Experience_HTTP_Listener_config"
+						attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload
+						value='#["[{\"year\":2021,\"month\":8,\"employeeName\":\"Emma\",\"employeeEmail\":\"emma@company.com\",\"amount\":2100},{\"year\":2021,\"month\":8,\"employeeName\":\"Emma\",\"employeeEmail\":\"emma@company.com\",\"amount\":5210},{\"year\":2021,\"month\":8,\"employeeName\":\"John\",\"employeeEmail\":\"john@company.com\",\"amount\":2000},{\"year\":2021,\"month\":8,\"employeeName\":\"Emma\",\"employeeEmail\":\"emma@company.com\",\"amount\":3500}]"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when /payment/calculate"
+				doc:id="e241e9b0-9110-4781-b39f-c407e9a3c516"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/payment/calculate" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload
+						value='#[[{"employeeName":"John","employeeEmail":"john@company.com","salary":1200000},{"employeeName":"Emma","employeeEmail":"emma@company.com","salary":1200000}]&#10;]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when sned payment error"
+				doc:id="3df839a2-7b9a-4c22-84e2-c1e350972417"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/employee/payment" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:error
+						typeId="ERROR:SEND_PAYMENT_REQUEST_ERROR" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when send email"
+				doc:id="26bd7183-08bc-4b9c-a3a3-453f117d9a0a" processor="email:send">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="Email_IAMP_Sender" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value='#["SKIP"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="PaymentAPI"
+				doc:id="66f33012-b6df-4fb9-b3cf-cccf416a6133" name="PaymentAPI" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that
+				doc:name="Assert that" doc:id="28a770a8-5d35-48b7-a160-795d1209a0d1"
+				expression="#[payload]"
+				is='#[MunitTools::equalToIgnoringCase("Payment process successed")]' />
+		</munit:validation>
+	</munit:test>
+
+</mule>

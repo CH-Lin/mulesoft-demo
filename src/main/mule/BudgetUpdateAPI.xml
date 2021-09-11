@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="BudgetUpdateAPIFlow"
+		doc:id="cb183219-cdb9-4a45-8f3a-f402c0fb10ad">
+		<http:listener doc:name="Listener"
+			doc:id="59cbeedd-e3bb-445b-8c91-1c8aabdd8004"
+			config-ref="Experience_HTTP_Listener_config" path="/budget/update"
+			allowedMethods="PATCH">
+			<http:response>
+				<http:headers><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "application/json"
+}]]]></http:headers>
+			</http:response>
+		</http:listener>
+		<set-variable value="#[payload]" doc:name="Set Variable"
+			doc:id="933fdb2f-7b47-4477-93ee-f6b75e07f9f1" variableName="amount" />
+		<http:request method="POST"
+			doc:name="Add Japan budget request"
+			doc:id="a0e2ee56-e9f9-4e43-bec1-7972b8ee9389"
+			config-ref="HTTP_Process_Request_configuration" path="/add/budget">
+			<http:body><![CDATA[#[vars.amount]]]></http:body>
+			<http:headers><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "application/json"
+}]]]></http:headers>
+		</http:request>
+		<http:request method="PATCH"
+			doc:name="Update USA budget request"
+			doc:id="c210cc56-1656-4d15-86e5-9ba0d33fdeee"
+			config-ref="HTTP_Process_Request_configuration" path="/update/budget">
+			<http:body><![CDATA[#[vars.amount]]]></http:body>
+			<http:headers><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "application/json"
+}]]]></http:headers>
+		</http:request>
+		<set-payload value='#["Budget sync done!"]'
+			doc:name="Set Payload" doc:id="2a2a876d-7d6f-41f5-88ce-0924a418a475" />
+	</flow>
+</mule>

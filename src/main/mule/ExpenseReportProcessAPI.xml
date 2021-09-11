@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:java="http://www.mulesoft.org/schema/mule/java"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+
+	<flow name="ExpenseReportProcessAPI"
+		doc:id="48c33245-f9f2-4e08-8f4d-20a7b379f491">
+		<http:listener doc:name="Listener"
+			doc:id="511d971b-efa8-4665-a79a-23f06870acbe"
+			config-ref="Experience_HTTP_Listener_config" path="/expense"
+			outputMimeType='application/json' allowedMethods="POST" />
+		<set-variable value="#[payload.filepath]"
+			doc:name="Set Variable" doc:id="462348a6-3dd9-4bd4-8258-40e7a7edcc5c"
+			variableName="filePath" />
+		<ee:transform doc:name="Transform Message"
+			doc:id="f06babbc-7040-4031-aecb-1f637be4ef9e">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	id: payload.emailid,
+	from: payload.emailfrom
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-variable value="#[payload]" doc:name="Set Variable"
+			doc:id="a5399de6-6d5f-4fc5-a222-4ad086a6701c"
+			variableName="emailInfo" />
+		<logger level="INFO" doc:name="Logger"
+			doc:id="db39c7ee-e300-4b14-814f-a2942e0f9081"
+			message='#[vars.filePath]' />
+		<java:invoke-static
+			method="process(java.lang.String, java.lang.String)"
+			doc:name="Process expense report"
+			doc:id="914c4296-1740-4726-bca8-cdf2ae5f12c5"
+			class="com.demo.expense.ExpenseReportProcessor">
+			<java:args><![CDATA[#[{filePath: vars.filePath, email: vars.emailInfo.from}]]]></java:args>
+		</java:invoke-static>
+		<choice doc:name="Check process status"
+			doc:id="56a17268-e9d4-4b03-9c5e-6526bc6b38b2">
+			<when expression="#[payload.status == true]">
+				<try doc:name="Try"
+					doc:id="873daba4-fc98-4739-88ea-7e2532f1a3c9">
+					<http:request method="POST"
+						doc:name="Add reimbursements ro HR System"
+						doc:id="7b87988f-01d9-4a08-b62e-e5b0c0b6280e"
+						config-ref="HTTP_Request_Emploee_System" path="/add/reimbursement">
+						<http:body><![CDATA[#[payload.jsonData]]]></http:body>
+						<http:headers><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "application/json"
+}]]]></http:headers>
+						<http:response-validator>
+							<http:success-status-code-validator
+								values="200" />
+						</http:response-validator>
+					</http:request>
+					<logger level="INFO" doc:name="Logger"
+						doc:id="b75ab3f6-3a15-49ca-80ee-f97edd9b7068"
+						message='#["Successfully updated reimbursement record on the HR system for employee "]' />
+					<email:mark-as-read
+						emailId="#[vars.emailInfo.id]" doc:name="Mark as read"
+						doc:id="685fbac8-47b2-4b52-803c-03865e57ebcc"
+						config-ref="Email_IMAP" />
+					<set-payload value="#['HR system updated']"
+						doc:name="Set Payload"
+						doc:id="67440051-3421-43d7-b14b-43b2b70faac2" />
+					<error-handler>
+						<on-error-continue enableNotifications="true"
+							logException="true" doc:name="On Error Propagate"
+							doc:id="6a33fe71-6285-4a74-8c97-a88e1e1b5ae7">
+							<logger level="INFO" doc:name="Logger"
+								doc:id="fa0af2ee-26c0-4ada-9f8f-a9deb6ba204b"
+								message='#["Update HR System fail for expense report from " ++ payload.name ++ " email &lt;" ++ vars.emailInfo.from ++ "&gt;"]' />
+							<email:send doc:name="Error when update HR System"
+								doc:id="c55f90ad-0a75-4e6b-99a4-1de15d683d5e"
+								config-ref="Email_IAMP_Sender" fromAddress="${HR_EMAIL}"
+								subject="Expense report error">
+								<email:to-addresses>
+									<email:to-address value="${HR_EMAIL}" />
+								</email:to-addresses>
+								<email:body contentType="text/plain" encoding="UTF-8">
+									<email:content><![CDATA[#[output application/json
+---
+"Error when update reimbursement record on HR System for employee whose name is " ++ payload.data.name ++ " and from email address " ++ vars.emailInfo.from]]]></email:content>
+								</email:body>
+							</email:send>
+							<set-payload value="#['HR system update fail']"
+								doc:name="Set Payload"
+								doc:id="bbcdb225-c35b-40c9-adc1-0ce98a0b940e" />
+						</on-error-continue>
+					</error-handler>
+				</try>
+			</when>
+			<otherwise>
+				<logger level="INFO" doc:name="Logger"
+					doc:id="c66a87ed-846b-40e3-8faa-cd8ca1d1db05"
+					message='#["Process expense report received from " ++ vars.emailInfo.from ++ " failed!"]' />
+				<email:send
+					doc:name="Send notification to sender who send the expense report"
+					doc:id="8a573131-ded7-41c5-a944-9e7be0f3f154"
+					config-ref="Email_IAMP_Sender" fromAddress="${HR_EMAIL}"
+					subject="Expense report error"
+					toAddresses="#[[vars.emailInfo.from]]">
+					<email:body contentType="text/plain" encoding="UTF-8">
+						<email:content><![CDATA[#[output application/json
+---
+payload.msg]]]></email:content>
+					</email:body>
+				</email:send>
+				<set-payload value="#['Expense report incorrect']"
+					doc:name="Set Payload"
+					doc:id="7a89409b-2562-490e-9b6f-23cadd737a91" />
+			</otherwise>
+		</choice>
+	</flow>
+</mule>

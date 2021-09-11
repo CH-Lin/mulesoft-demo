@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:java="http://www.mulesoft.org/schema/mule/java"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:gmail="http://www.mulesoft.org/schema/mule/gmail"
+	xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:excel="http://www.mulesoft.org/schema/mule/excel"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/excel http://www.mulesoft.org/schema/mule/excel/current/mule-excel.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/gmail http://www.mulesoft.org/schema/mule/gmail/current/mule-gmail.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<import file="global-configurations.xml" />
+
+	<flow name="EmailProcessAPI"
+		doc:id="d4bce114-b2b7-438b-9898-7f28a01a3333">
+		<http:listener doc:name="Listener"
+			doc:id="b487b00d-b446-40c5-97bc-71cfd93dc8bd"
+			config-ref="Experience_HTTP_Listener_config" path="/email"
+			allowedMethods="POST">
+			<http:response statusCode="200">
+				<http:headers><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "application/json"
+}]]]></http:headers>
+			</http:response>
+		</http:listener>
+		<logger level="INFO" doc:name="Logger"
+			doc:id="cdd56796-6081-4319-942e-25eb4f14ca59"
+			message="Start to process emails" />
+		<email:list-imap doc:name="List Emails"
+			doc:id="e283acbb-3080-4b32-891c-df74ae42d3ab" config-ref="Email_IMAP"
+			attachmentNamingStrategy="NAME_HEADERS_SUBJECT">
+			<non-repeatable-iterable />
+		</email:list-imap>
+		<logger level="INFO" doc:name="Logger"
+			doc:id="411c501a-83a2-41f8-beaf-7de23687dbdb"
+			message="Fetch emails finished!" />
+		<foreach doc:name="For Each Email"
+			doc:id="bbb2e8bf-39b8-4e05-8200-99a3698263f3" collection="#[payload]"
+			rootMessageVariableName="emails">
+			<flow-ref doc:name="Flow Reference"
+				doc:id="59f0b125-5490-480c-961e-588721209f2e"
+				name="EmailProcessFlow" />
+
+		</foreach>
+		<set-payload doc:name="Set Payload"
+			doc:id="ba5ac15d-82e6-4efe-b562-f3a6faf120d7"
+			value='#["Process email done!"]' />
+	</flow>
+	<sub-flow name="EmailProcessFlow"
+		doc:id="605d1caf-4f1b-4ef6-b8d9-ebbca5237a19">
+		<choice doc:name="Check seen flag"
+			doc:id="183fc6c0-79bf-46fb-9b59-3b07f14476e5">
+			<when expression="#[attributes.flags.seen == false]">
+				<ee:transform doc:name="Transform Message"
+					doc:id="63a17e8c-e85a-4501-8ba9-e6e4e7222564">
+					<ee:message>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="emailInfo"><![CDATA[%dw 2.0
+output application/java
+---
+{
+	id: attributes.id default "",
+	from: attributes.fromAddresses[0],
+	subject: attributes.subject default ""
+}]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+				<set-variable
+					value="#[output application/java
+&#10;---
+&#10;payload.attachments]"
+					doc:name="Set attachments"
+					doc:id="233e0485-6e76-42f6-ad0f-9efdf1f81206"
+					variableName="attachements" />
+				<logger level="INFO" doc:name="Logger"
+					doc:id="5cf57a98-021e-4e96-960d-e465b0926f52"
+					message='#["Process email from " ++ vars.emailInfo.from ++ " with subject " ++ vars.emailInfo.subject]' />
+				<java:invoke-static
+					method="process(java.lang.String)" doc:name="ExpenseReportChecker"
+					doc:id="40cdb910-c347-4075-a864-53390978e793"
+					class="com.demo.expense.EmailProcessor">
+					<java:args><![CDATA[#[{title: vars.emailInfo.subject}]]]></java:args>
+				</java:invoke-static>
+				<choice doc:name="Check is expense report or not"
+					doc:id="9eefed0c-3b0a-47c0-bb5b-203312ac34a7">
+					<when expression="#[payload == true]">
+						<foreach doc:name="For each attachment"
+							doc:id="08232d26-b2d9-424c-9d51-bc9937963468"
+							collection="#[entriesOf(vars.attachements mapObject ((value, key) -&gt; {(key) : value.^raw})) default []]">
+							<set-variable value="#[payload.key]"
+								doc:name="Set attachment name"
+								doc:id="d15af62c-8ce9-41fa-af82-318d731cc8ec"
+								variableName="attachmentName" />
+							<set-variable
+								value="#['${ATTACHMENT_FOLDER}' ++ vars.attachmentName]"
+								doc:name="Set base folder for attachments"
+								doc:id="b2b0565d-74af-4769-93f7-ba4d44fe4543"
+								variableName="filePath" />
+							<logger level="DEBUG" doc:name="Log attachment name"
+								doc:id="7a995bce-4228-46e8-a2a6-3e18126310e1"
+								message='#["Save " ++ vars.attachmentName]' />
+							<file:write
+								doc:name="Save attachments to local folder for processing"
+								doc:id="838f92ae-5c42-47ad-b20a-c3d3818c7386"
+								path="#[vars.filePath]">
+								<file:content><![CDATA[#[payload.value]]]></file:content>
+							</file:write>
+							<ee:transform doc:name="Transform Message"
+								doc:id="eeabd997-a09d-4d12-af29-415088db5ca9">
+								<ee:message>
+									<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	emailid: vars.emailInfo.id,
+	emailfrom: vars.emailInfo.from,
+	filepath: vars.filePath
+}]]></ee:set-payload>
+								</ee:message>
+							</ee:transform>
+							<http:request method="POST"
+								doc:name="Process Expense Request"
+								doc:id="50cb7d01-5cdc-403d-8dc1-85236438f577"
+								config-ref="HTTP_Process_Request_configuration" path="/expense"
+								responseTimeout="30000">
+								<http:headers><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "application/json"
+}]]]></http:headers>
+								<http:response-validator>
+									<http:success-status-code-validator
+										values="200" />
+								</http:response-validator>
+							</http:request>
+						</foreach>
+
+					</when>
+
+				</choice>
+
+			</when>
+			<otherwise>
+				<set-payload value="#[false]" doc:name="Set Payload"
+					doc:id="468eb878-c25e-4a16-a518-01b79400469f" />
+			</otherwise>
+
+		</choice>
+	</sub-flow>
+
+</mule>

@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:java="http://www.mulesoft.org/schema/mule/java"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd">
+	<munit:config name="test-suite-EmailProcessor.xml" />
+	<munit:test name="EmailProcessAPITest"
+		doc:id="e7708ac9-98db-45af-b819-37a509f2854b">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="989b432a-c002-41ba-8f7f-b22f703e49af"
+				processor="http:listener">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/email" attributeName="path" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="c4503519-ad89-4a73-b3cc-14ad083654d1"
+				processor="email:list-imap">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="Email_IMAP" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload
+						value="#[output application/java&#10;---&#10;[{},{}]&#10;]" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="EmailProcessAPI"
+				doc:id="741f342a-546c-4135-9503-03fa03a06926" name="EmailProcessAPI" />
+
+		</munit:execution>
+
+	</munit:test>
+	<munit:test name="EmailProcessFlowTest"
+		doc:id="a818a361-2154-470e-adb2-799c3881b387" description="Test">
+		<munit:behavior>
+			<set-variable value="#[false]"
+				doc:name="Set email attributes seen"
+				doc:id="b7ea4336-b96d-4a58-8e98-916c46b673fa" variableName="seen" />
+			<set-variable value="12"
+				doc:name="Set email attributes emailID"
+				doc:id="7d7eddf6-8840-4fe8-b0fa-76fb5202be99" variableName="emailID" />
+			<set-variable value="test@company.com"
+				doc:name="Set email attributes fromAddresses"
+				doc:id="a67fcb22-c424-47fc-bb26-b37646c84438"
+				variableName="fromAddresses" />
+			<set-variable value="expense report"
+				doc:name="Set email attributes subject"
+				doc:id="ac109226-0f61-42f5-949d-11bc903ad677" variableName="subject" />
+			<munit-tools:mock-when
+				doc:name="Mock when save attachment"
+				doc:id="9c8179c2-4f3b-442f-b2a3-4c865f4fd540" processor="file:write">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="Save attachments to local folder for processing"
+						attributeName="doc:name" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when process expense"
+				doc:id="48d26629-40c5-4e54-b49c-4f3fb62172a7"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/expense" attributeName="path" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<set-payload
+				value='#[output application/java
+&#10;---
+&#10;{payload: {
+&#10;     attachments: [{key:"test", value:"test"}]
+&#10;  }
+&#10;}]'
+				doc:name="Set Payload" doc:id="6284fadd-d782-4698-ab85-8cbcc20b2cca" />
+			<ee:transform doc:name="Transform Message"
+				doc:id="632b4e09-ed8a-4bf1-a50e-0d70c0902bd3">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	attachments: payload.payload.attachments[0]
+}]]></ee:set-payload>
+					<ee:set-attributes><![CDATA[%dw 2.0
+output application/java
+---
+{
+	bccAddresses: [],
+	flags: {
+		seen: vars.seen
+	},
+	fromAddresses: [vars.fromAddresses],
+	id: "12",
+	subject: vars.subject
+}]]></ee:set-attributes>
+				</ee:message>
+			</ee:transform>
+			<flow-ref doc:name="EmailProcessFlow"
+				doc:id="b80014a9-ce01-45bc-adf6-d4d565429fec"
+				name="EmailProcessFlow" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert equals"
+				doc:id="ffeeed47-a78f-4bea-b6ee-4df820ba3ea0" actual="#[payload]"
+				expected='#[true]' />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="EmailProcessFlowTestSeenIsTrue"
+		doc:id="1db7a063-6c25-484f-9bd4-af9cb100fc57" description="Test">
+		<munit:behavior>
+			<set-variable value="#[true]"
+				doc:name="Set email attributes seen"
+				doc:id="2024cce0-e414-4513-a690-62e0f559eba8" variableName="seen" />
+			<set-variable value="12"
+				doc:name="Set email attributes emailID"
+				doc:id="0ebcb702-b83f-45d2-9f81-efafa2dbef44" variableName="emailID" />
+			<set-variable value="test@company.com"
+				doc:name="Set email attributes fromAddresses"
+				doc:id="badc7848-ae6a-4b05-ad91-f1606e683138"
+				variableName="fromAddresses" />
+			<set-variable value="expense report"
+				doc:name="Set email attributes subject"
+				doc:id="e2bb0d0f-ef62-4696-a588-6bbc1aa868f9" variableName="subject" />
+			<munit-tools:mock-when
+				doc:name="Mock when save attachment"
+				doc:id="9fe72aa4-9ed3-472e-b696-884bcd95d9c0" processor="file:write">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="Save attachments to local folder for processing"
+						attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value='#["SKIP"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when process expense"
+				doc:id="ebe697e4-ffa3-4f80-a184-1de7e793df7b"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/expense" attributeName="path" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<set-payload
+				value='#[output application/java&#10;---&#10;{payload: {&#10;     attachments: [{key:"test", value:"test"}]&#10;  }&#10;}]'
+				doc:name="Set Payload" doc:id="fbba73a8-6ef6-4b66-a348-41b7cf2a6514" />
+			<ee:transform doc:name="Transform Message"
+				doc:id="cfc04679-0dce-4ac7-aae3-a0fbf2abfe91">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	attachments: payload.payload.attachments[0]
+}]]></ee:set-payload>
+					<ee:set-attributes><![CDATA[%dw 2.0
+output application/java
+---
+{
+	bccAddresses: [],
+	flags: {
+		seen: vars.seen
+	},
+	fromAddresses: [vars.fromAddresses],
+	id: "12",
+	subject: vars.subject
+}]]></ee:set-attributes>
+				</ee:message>
+			</ee:transform>
+			<flow-ref doc:name="EmailProcessFlow"
+				doc:id="dce5bc04-bfba-4833-859d-3687c13132dc"
+				name="EmailProcessFlow" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert equals"
+				doc:id="7e5dcad6-6f47-4e39-8088-f5daefce6932" actual="#[payload]"
+				expected='#[false]' />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="EmailProcessFlowTestNotExpenseReport"
+		doc:id="5dee0cb6-f6b1-45a7-a562-1abc62ccf719" description="Test">
+		<munit:behavior>
+			<set-variable value="#[false]"
+				doc:name="Set email attributes seen"
+				doc:id="d38cd2c6-dd2b-42e3-b760-fb07fcba7ecc" variableName="seen" />
+			<set-variable value="12"
+				doc:name="Set email attributes emailID"
+				doc:id="f875c211-9b54-457b-a515-93d5d0ef9da6" variableName="emailID" />
+			<set-variable value="test@company.com"
+				doc:name="Set email attributes fromAddresses"
+				doc:id="e023fc41-24c1-4c28-811a-0cb538d1b4eb"
+				variableName="fromAddresses" />
+			<set-variable value="Dayoff"
+				doc:name="Set email attributes subject"
+				doc:id="5e7739b3-0faa-4fb6-8503-2866bc9e2da0" variableName="subject" />
+			<munit-tools:mock-when
+				doc:name="Mock when call attachment handler"
+				doc:id="1dad48df-8906-4c5e-b8ea-a3bfcb1786c7" processor="file:write">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="Save attachments to local folder for processing"
+						attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value='#["SKIP"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when process expense"
+				doc:id="723fcaf8-a3b2-4209-af67-432e31c43d7c"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/expense" attributeName="path" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<set-payload
+				value='#[output application/java&#10;&#10;---&#10;&#10;{payload: {&#10;&#10;     &#10;&#10;  }&#10;&#10;}]'
+				doc:name="Set Payload" doc:id="b7c3971e-1332-44ee-b832-5df3060d2364" />
+			<ee:transform doc:name="Transform Message"
+				doc:id="3ddeed04-fa07-480a-815b-700f26e90158">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	attachments: payload.payload.attachments[0]
+}]]></ee:set-payload>
+					<ee:set-attributes><![CDATA[%dw 2.0
+output application/java
+---
+{
+	bccAddresses: [],
+	flags: {
+		seen: vars.seen
+	},
+	fromAddresses: [vars.fromAddresses],
+	id: "12",
+	subject: vars.subject
+}]]></ee:set-attributes>
+				</ee:message>
+			</ee:transform>
+			<flow-ref doc:name="EmailProcessFlow"
+				doc:id="1eaa377a-ee57-4644-afd6-e18afc1ddd1a"
+				name="EmailProcessFlow" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert equals"
+				doc:id="0e745e9e-baa9-48c7-bf84-3c9369675fe9" actual="#[payload]"
+				expected="#[false]" />
+		</munit:validation>
+	</munit:test>
+</mule>

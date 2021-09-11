@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd 
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+	<configuration-properties
+		doc:name="Configuration properties"
+		doc:id="4f6ad2c8-1691-4b14-8507-c99d78698639" file="config.properties" />
+	<http:listener-config
+		name="Experience_HTTP_Listener_config"
+		doc:name="Experience HTTP Listener config"
+		doc:id="78cda893-9974-4c4d-954a-ac77279ec849" basePath="/employee">
+		<http:listener-connection host="0.0.0.0"
+			port="${APP_PORT}" />
+	</http:listener-config>
+	<email:imap-config name="Email_IMAP"
+		doc:name="Email IMAP" doc:id="0aaf11ed-7e63-46dc-8ace-c9b1fba1708c">
+		<email:imaps-connection host="imap.gmail.com"
+			user="${IMAP_USER}" password="${IMAP_PW}">
+			<tls:context>
+				<tls:trust-store insecure="true" />
+			</tls:context>
+		</email:imaps-connection>
+	</email:imap-config>
+	<email:smtp-config name="Email_IAMP_Sender"
+		doc:name="Email SMTP" doc:id="5d38da49-5f47-4766-a611-1d7b84714585">
+		<email:smtps-connection host="smtp.gmail.com"
+			user="${SMTPS_USER}" password="${SMTPS_PW}">
+			<tls:context>
+				<tls:trust-store insecure="true" />
+			</tls:context>
+		</email:smtps-connection>
+	</email:smtp-config>
+	<http:request-config
+		name="HTTP_Request_Emploee_System"
+		doc:name="HTTP Request configuration"
+		doc:id="42fac6cc-231a-4391-b824-9cee03856b5d" basePath="/employee">
+		<http:request-connection
+			host="${HR_SYSTEM_IP}" port="${HR_SYSTEM_PORT}" />
+	</http:request-config>
+	<http:request-config
+		name="HTTP_Request_Financial_System_JP"
+		doc:name="HTTP Request configuration"
+		doc:id="e5231f6d-b21a-4f2b-8757-f51451026738" basePath="/financial">
+		<http:request-connection
+			host="${FINANCIAL_SYSTEM_JP_IP}" port="${FINANCIAL_SYSTEM_JP_PORT}" />
+	</http:request-config>
+	<http:request-config
+		name="HTTP_Request_Financial_System_USA"
+		doc:name="HTTP Request configuration"
+		doc:id="ba54fd36-db53-453e-9cc7-9f1c6ecb737c" basePath="/financial">
+		<http:request-connection
+			host="${FINANCIAL_SYSTEM_USA_IP}" port="${FINANCIAL_SYSTEM_USA_PORT}" />
+	</http:request-config>
+	<http:request-config
+		name="HTTP_Process_Request_configuration"
+		doc:name="HTTP Sys Request configuration"
+		doc:id="5b8e4654-084c-4e8b-b3f5-c6fc7d6da205" basePath="/employee">
+		<http:request-connection host="127.0.0.1"
+			port="8081" />
+	</http:request-config>
+</mule>

@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<munit:config name="test-suite-AttachmentHandlerFlow.xml" />
+	<munit:test
+		name="AttachmentHandlerFlow-CorrectExpenseReport"
+		doc:id="bc8da54d-49ed-4970-a6b9-cf45c28f4e0f" description="Test">
+		<munit:behavior>
+			<ee:transform doc:name="Transform Message"
+				doc:id="34e7f55d-d4a0-462a-bc84-49c561897417">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	filepath:"src/test/resources/Expense Report 1.xlsx",
+	emailid:"",
+	emailfrom:""
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<munit-tools:mock-when
+				doc:name="Mock when http"
+				doc:id="51c173c0-cba4-4231-be76-43beeba644ef"
+				processor="http:listener">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/expense" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value="#[payload]" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when update hr system successed"
+				doc:id="8bb7fac4-a667-4836-a4a8-907bd46a6b5a"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/add/reimbursement" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value='#["SKIP"]' />
+				</munit-tools:then-return>
+
+
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when mark as read"
+				doc:id="36490fa4-7cc1-40c1-b0c2-eaecb7d83ef4"
+				processor="email:mark-as-read">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="Email_IMAP" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value='#["SKIP"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="ExpenseReportProcessAPI"
+				doc:id="38b801cd-a630-47d2-b298-d6210914a262"
+				name="ExpenseReportProcessAPI" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that
+				doc:name="Assert that" doc:id="82f21d1a-1819-478d-a716-687976845b37"
+				is="#[MunitTools::equalToIgnoringCase('HR system updated')]"
+				expression="#[payload]" />
+		</munit:validation>
+
+	</munit:test>
+	<munit:test
+		name="AttachmentHandlerFlow-CorrectExpenseReport-HRSystemUpdateFail"
+		doc:id="4c69566f-7a5c-459f-b4f6-7fa0021b0d87" description="Test">
+		<munit:behavior>
+			<ee:transform doc:name="Transform Message"
+				doc:id="bb3620eb-3fd6-4f1b-a9d7-2952898f9f61">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	filepath:"src/test/resources/Expense Report 1.xlsx",
+	emailid:"",
+	emailfrom:""
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<munit-tools:mock-when
+				doc:name="Mock when http"
+				doc:id="4dcdd894-f08e-4daa-aa68-cb771cce82b0"
+				processor="http:listener">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/expense" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value="#[payload]" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when update hr system error"
+				doc:id="267a4941-1501-46e6-a1df-16ab79d3c78a"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/add/reimbursement" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value='#[{"name": "Ted"}]' />
+					<munit-tools:error
+						typeId="#['HTTP:CONNECTIVITY']" />
+					<munit-tools:variables>
+						<munit-tools:variable key="emailInfo"
+							value='#[{"from":"test@company.com"}]' />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when send email"
+				doc:id="3988bc96-2d40-4030-8377-547862935de6" processor="email:send">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="Email_IAMP_Sender" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="ExpenseReportProcessAPI"
+				doc:id="40e38c37-9846-4cc8-a6c5-727e2dfdb8c7"
+				name="ExpenseReportProcessAPI" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that
+				doc:name="Assert that" doc:id="0b15a845-77df-4b25-9305-67b9a1663528"
+				is='#[MunitTools::equalToIgnoringCase("HR system update fail")]'
+				expression="#[payload]" />
+		</munit:validation>
+
+	</munit:test>
+	<munit:test
+		name="AttachmentHandlerFlow-IncorrectExpenseReport"
+		doc:id="49f18b46-85aa-4c73-8b98-235f0cbea460" description="Test">
+		<munit:behavior>
+			<ee:transform doc:name="Transform Message"
+				doc:id="d5872b52-9d4b-42a0-8fcb-d5ca5d92b366">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	filepath:"src/test/resources/Expense Report with error 1.xlsx",
+	emailid:"",
+	emailfrom:""
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<munit-tools:mock-when
+				doc:name="Mock when http"
+				doc:id="95164779-1957-49a4-9c58-653a20c5116d"
+				processor="http:listener">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/expense" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value="#[payload]" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when send email"
+				doc:id="3aad4f40-542e-4d71-9ea7-4fad2741416f" processor="email:send">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="Email_IAMP_Sender" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value='#["SKIP"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="ExpenseReportProcessAPI"
+				doc:id="fd00c450-b5bc-41d0-b596-f18c54a1c9f4"
+				name="ExpenseReportProcessAPI" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that
+				doc:name="Assert that" doc:id="b7bf4abf-3ab9-4770-a5ee-ebad4b9e5f32"
+				is="#[MunitTools::equalToIgnoringCase('Expense report incorrect')]"
+				expression="#[payload]" />
+		</munit:validation>
+	</munit:test>
+
+
+</mule>

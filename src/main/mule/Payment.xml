@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:java="http://www.mulesoft.org/schema/mule/java"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd">
+	<import file="global-configurations.xml" />
+
+	<configuration-properties
+		file="config.properties" />
+	<flow name="PaymentAPI"
+		doc:id="1bafddae-bc70-47a5-beb5-631ff1f85bf8">
+		<http:listener doc:name="Listener"
+			doc:id="898d6c6e-fae8-4653-bfa9-9d2671834a1a"
+			config-ref="Experience_HTTP_Listener_config" path="/payment/process" />
+		<logger level="INFO" doc:name="Logger"
+			doc:id="463554c4-7b80-4779-af57-fc95fbd58ad1" message="Payment" />
+		<http:request method="GET" doc:name="Request"
+			doc:id="b084993e-b430-48cd-9131-3fb49b91c001"
+			config-ref="HTTP_Process_Request_configuration"
+			path="/payment/calculate" />
+		<logger level="INFO" doc:name="Logger"
+			doc:id="fc5f4bc8-2e04-4d47-aa66-22fe7b72d006" message="#[payload]" />
+		<foreach doc:name="For Each"
+			doc:id="34379b61-e40e-44b0-b3fc-26a26dd9b730" collection="#[payload]">
+			<set-variable value="#[payload.employeeName]"
+				doc:name="Set current employee name"
+				doc:id="f90a0add-3fa7-47dd-9055-93240ab682be"
+				variableName="employeeName" />
+			<set-variable value="#[payload.employeeEmail]"
+				doc:name="Set current employee email"
+				doc:id="96e950c2-c71c-4a98-a12a-e2f64f110146"
+				variableName="employeeEmail" />
+			<try doc:name="Try" doc:id="a055e943-2b8b-42bc-8a3f-a270d3f123f6">
+				<http:request method="PATCH" doc:name="Payment request"
+					doc:id="d33f796e-e90f-41b8-a145-5689e0b1756c"
+					config-ref="HTTP_Request_Financial_System_JP"
+					path="/employee/payment">
+					<http:body><![CDATA[#[output application/json
+---
+payload]]]></http:body>
+					<http:query-params><![CDATA[#[output application/java
+---
+{
+	month : now().month - 1,
+	year : now().year
+}]]]></http:query-params>
+					<http:response-validator>
+						<http:success-status-code-validator
+							values="200" />
+					</http:response-validator>
+				</http:request>
+				<logger level="INFO" doc:name="Logger"
+					doc:id="82109ffa-e4b2-4576-9050-53ff34ad427a" message="#[payload]" />
+				<email:send doc:name="Payment request done"
+					doc:id="fae31c97-147e-4ed3-90b5-2dad46992cb1"
+					config-ref="Email_IAMP_Sender" fromAddress="${HR_EMAIL}"
+					subject="Payment processed" toAddresses="#[[vars.employeeEmail]]">
+					<email:body contentType="text/plain" encoding="UTF-8">
+						<email:content><![CDATA[#[output application/json
+---
+"Dear " ++ vars.employeeName ++ ", your payment is being processed!"]]]></email:content>
+					</email:body>
+				</email:send>
+				<error-handler>
+					<on-error-propagate enableNotifications="true"
+						logException="true" doc:name="On Error Propagate"
+						doc:id="db723052-7ea8-44f2-bdec-a5a06d4f7a2c">
+						<logger level="INFO" doc:name="Logger"
+							doc:id="595f46e1-be32-4de1-83cc-635f6d2b16d7"
+							message="#[payload]" />
+						<email:send doc:name="Error when send payment request"
+							doc:id="e2261b32-1c8b-4729-828a-70cea06a50d9"
+							config-ref="Email_IAMP_Sender" fromAddress="${HR_EMAIL}"
+							subject="Expense report error">
+							<email:to-addresses>
+								<email:to-address value="${HR_EMAIL}" />
+							</email:to-addresses>
+							<email:body contentType="text/plain" encoding="UTF-8">
+								<email:content><![CDATA[#[output application/json
+---
+"Error when sending payment rquest for employee whose name is " ++ vars.employeeName ++ " and email address is" ++ vars.employeeEmail]]]></email:content>
+							</email:body>
+						</email:send>
+						<raise-error doc:name="Raise error"
+							doc:id="bfcffcbb-d6c8-41aa-b33a-175181f2dd83"
+							type="ERROR:SEND_PAYMENT_REQUEST_ERROR" />
+					</on-error-propagate>
+				</error-handler>
+			</try>
+		</foreach>
+		<set-payload value="Payment process successed"
+			doc:name="Set Payload" doc:id="69cb1e85-4266-446f-a3d1-a6d4e2c979eb" />
+	</flow>
+</mule>

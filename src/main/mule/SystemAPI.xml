@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<configuration-properties
+		file="config.properties" />
+	<flow name="GetReimbursementSyatemAPI"
+		doc:id="2a4fa44e-a315-40ee-96fb-bce7e711b2d8">
+		<http:listener doc:name="Listener"
+			doc:id="6674e948-d4dc-4ce7-9d07-ffaf33125506"
+			config-ref="Experience_HTTP_Listener_config"
+			path="/get/reimbursement">
+			<http:response>
+				<http:headers><![CDATA[#[output application/java
+---
+{
+	"Content-type" : "application/json"
+}]]]></http:headers>
+			</http:response>
+		</http:listener>
+		<try doc:name="Try" doc:id="9c52ac6c-f756-457a-a68c-337be258ed07">
+			<http:request method="GET"
+				doc:name="Get reimbursement information"
+				doc:id="06712520-a6f7-4ecf-be56-c612dfda446b"
+				config-ref="HTTP_Request_Emploee_System" path="/get/reimbursement">
+				<http:query-params><![CDATA[#[output application/java
+---
+{
+	month : now().month - 1,
+	year : now().year
+}]]]></http:query-params>
+				<http:response-validator>
+					<http:success-status-code-validator
+						values="200" />
+				</http:response-validator>
+			</http:request>
+			<set-payload
+				value="#[output application/json
+&#10;---
+&#10;payload]"
+				doc:name="Set Payload" doc:id="1902ebef-acff-4549-8100-c8a97f7c2d70" />
+			<error-handler>
+				<on-error-propagate enableNotifications="true"
+					logException="true" doc:name="On Error Propagate"
+					doc:id="400ec23b-c5b7-4868-ab5c-318cd0150e91"
+					type="HTTP:CONNECTIVITY">
+					<email:send
+						doc:name="Error when get reimbursement information"
+						doc:id="f97dce63-a442-41ff-8fcf-39763dca2997"
+						config-ref="Email_IAMP_Sender" fromAddress="${HR_EMAIL}"
+						subject="Expense report error">
+						<email:to-addresses>
+							<email:to-address value="${HR_EMAIL}" />
+						</email:to-addresses>
+						<email:body contentType="text/plain" encoding="UTF-8">
+							<email:content><![CDATA[#[output application/json
+---
+"Error when get reimbursement information"]]]></email:content>
+						</email:body>
+					</email:send>
+					<raise-error doc:name="Raise error"
+						doc:id="a9800e04-1d93-49a4-a516-3730c7125269"
+						type="ERROR:GET_REIMBURSEMENT_INFO" />
+				</on-error-propagate>
+			</error-handler>
+		</try>
+	</flow>
+	<flow name="GetAllReimbursementSyatemAPI"
+		doc:id="0789d1a3-6eb2-4902-9085-24cae0b77112">
+		<http:listener doc:name="Listener"
+			doc:id="4c2e9293-e09c-4b3c-a5ce-54185c7e798d"
+			config-ref="Experience_HTTP_Listener_config"
+			path="/get/all/reimbursement">
+			<http:response>
+				<http:headers><![CDATA[#[output application/java
+---
+{
+	"Content-type" : "application/json"
+}]]]></http:headers>
+			</http:response>
+		</http:listener>
+		<try doc:name="Try" doc:id="2e4fe71c-f4d6-419c-88c2-ec2ecded6382">
+			<http:request method="GET"
+				doc:name="Get reimbursement information"
+				doc:id="e168e587-e291-43ae-9bae-7cc27932838c"
+				config-ref="HTTP_Request_Emploee_System" path="/get/reimbursement">
+				<http:query-params><![CDATA[#[output application/java
+---
+{
+	year : now().year
+}]]]></http:query-params>
+				<http:response-validator>
+					<http:success-status-code-validator
+						values="200" />
+				</http:response-validator>
+			</http:request>
+			<set-payload
+				value="#[output application/json&#10;&#10;---&#10;&#10;payload]"
+				doc:name="Set Payload" doc:id="2cb52c12-da55-4b53-9ceb-f0ecd7641b2b" />
+			<error-handler>
+				<on-error-propagate enableNotifications="true"
+					logException="true" doc:name="On Error Propagate"
+					doc:id="b2bde4eb-0096-4395-8293-b4ee62c5c3af"
+					type="HTTP:CONNECTIVITY">
+					<email:send
+						doc:name="Error when get reimbursement information"
+						doc:id="7695bf39-cb55-4a20-9884-01461391c185"
+						config-ref="Email_IAMP_Sender" fromAddress="${HR_EMAIL}"
+						subject="Expense report error">
+						<email:to-addresses>
+							<email:to-address value="${HR_EMAIL}" />
+						</email:to-addresses>
+						<email:body contentType="text/plain" encoding="UTF-8">
+							<email:content><![CDATA[#[output application/json
+---
+"Error when get reimbursement information"]]]></email:content>
+						</email:body>
+					</email:send>
+					<raise-error doc:name="Raise error"
+						doc:id="acae7319-63c5-4ebe-9111-6032af926483"
+						type="ERROR:GET_REIMBURSEMENT_INFO" />
+				</on-error-propagate>
+			</error-handler>
+		</try>
+	</flow>
+	<flow name="GetSalarySystemAPI"
+		doc:id="5733ffb6-858f-4e57-93b0-5a388d3a05ec">
+		<http:listener doc:name="Listener"
+			doc:id="52bc1139-847b-4f78-921c-d08834c3235c"
+			config-ref="Experience_HTTP_Listener_config" path="/get/salary">
+			<http:response>
+				<http:headers><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "application/json"
+}]]]></http:headers>
+			</http:response>
+		</http:listener>
+		<try doc:name="Try" doc:id="e945fdac-70e4-4537-a135-10fb0149564c">
+			<http:request method="GET"
+				doc:name="Get salary information"
+				doc:id="0522a647-97e5-44c4-8cb6-44536d1bfa01"
+				config-ref="HTTP_Request_Emploee_System" path="/get/salary/all">
+				<http:query-params><![CDATA[#[output application/java
+---
+{
+	month : now().month - 1,
+	year : now().year
+}]]]></http:query-params>
+				<http:response-validator>
+					<http:success-status-code-validator
+						values="200" />
+				</http:response-validator>
+			</http:request>
+			<set-payload
+				value="#[output application/json
+&#10;---
+&#10;payload]"
+				doc:name="Set Payload" doc:id="0aac41fd-d7cf-459e-99a5-9f8c63f9594f" />
+			<error-handler>
+				<on-error-propagate enableNotifications="true"
+					logException="true" doc:name="On Error Propagate"
+					doc:id="ea6bc773-2e92-41d8-b999-d2627a3c0c25">
+					<email:send doc:name="Error when get salary information"
+						doc:id="a35d0bd7-918f-44d8-97af-0604ec15f3b5"
+						config-ref="Email_IAMP_Sender" fromAddress="${HR_EMAIL}"
+						subject="Expense report error">
+						<email:to-addresses>
+							<email:to-address value="${HR_EMAIL}" />
+						</email:to-addresses>
+						<email:body contentType="text/plain" encoding="UTF-8">
+							<email:content><![CDATA[#[output application/json
+---
+"Error when salary information"]]]></email:content>
+						</email:body>
+					</email:send>
+					<raise-error doc:name="Raise error"
+						doc:id="700ffcc0-aca4-4d46-91ca-500dc51b893c"
+						type="ERROR:GET_SALARY_INFO" />
+				</on-error-propagate>
+			</error-handler>
+		</try>
+	</flow>
+	<flow name="GetJapanBudgetSystemAPI"
+		doc:id="18a6b84a-9ff7-46af-8e1c-36e6fedc7ee3">
+		<http:listener doc:name="Listener"
+			doc:id="6f69355c-5b46-4aac-86f1-7b1178733643"
+			config-ref="Experience_HTTP_Listener_config" path="/get/budget">
+			<http:response>
+				<http:headers><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "application/json"
+}]]]></http:headers>
+			</http:response>
+		</http:listener>
+		<try doc:name="Try" doc:id="7ffbc967-0584-415d-bfde-670e83762354">
+			<http:request method="GET"
+				doc:name="Get budget information"
+				doc:id="37e4d5eb-02cc-4bb1-a6c0-cd7e3e83bc65"
+				config-ref="HTTP_Request_Financial_System_JP"
+				path="/get/budget/{year}">
+				<http:uri-params><![CDATA[#[output application/java
+---
+{
+	"year" : now().year
+}]]]></http:uri-params>
+				<http:response-validator>
+					<http:success-status-code-validator
+						values="200" />
+				</http:response-validator>
+			</http:request>
+			<set-payload
+				value="#[output application/json&#10;&#10;---&#10;&#10;payload]"
+				doc:name="Set Payload" doc:id="7215f850-311b-47ed-8113-9d08eefa4f85" />
+			<error-handler>
+				<on-error-propagate enableNotifications="true"
+					logException="true" doc:name="On Error Propagate"
+					doc:id="ad21cc25-0026-49e7-a810-0fb8f1e7c3cf">
+					<email:send doc:name="Error when get budget information"
+						doc:id="b9a88a42-e9d7-47a2-8373-5268a1be9455"
+						config-ref="Email_IAMP_Sender" fromAddress="${HR_EMAIL}"
+						subject="Expense report error">
+						<email:to-addresses>
+							<email:to-address value="${HR_EMAIL}" />
+						</email:to-addresses>
+						<email:body contentType="text/plain" encoding="UTF-8">
+							<email:content><![CDATA[#[output application/json
+---
+"Error when get Japan budget information"]]]></email:content>
+						</email:body>
+					</email:send>
+					<raise-error doc:name="Raise error"
+						doc:id="e9966268-9d7b-408f-aeaa-9f2e03a68aa7"
+						type="ERROR:GET_BUDGET_INFO" />
+				</on-error-propagate>
+			</error-handler>
+		</try>
+	</flow>
+	<flow name="UpdateUSABudgetSystemAPI"
+		doc:id="f8680df2-fcae-4443-8b1e-e13dca1c8e90">
+		<http:listener doc:name="Listener"
+			doc:id="a4f3797c-5b27-4113-b289-6250c2ccf973"
+			config-ref="Experience_HTTP_Listener_config" path="/update/budget"
+			allowedMethods="PATCH">
+			<http:response>
+				<http:headers><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "application/json"
+}]]]></http:headers>
+			</http:response>
+		</http:listener>
+		<try doc:name="Try" doc:id="b9a33c69-0607-42dc-930a-52858eb16614">
+			<http:request method="PATCH"
+				doc:name="Update budget information"
+				doc:id="1a97bf95-f466-4923-9970-6a382adcb7b1"
+				config-ref="HTTP_Request_Financial_System_USA"
+				path="/subtract/budget">
+				<http:body><![CDATA[#[output application/json
+---
+{year:now().year, amount: payload}]]]></http:body>
+				<http:headers><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "application/json"
+}]]]></http:headers>
+				<http:response-validator>
+					<http:success-status-code-validator
+						values="200" />
+				</http:response-validator>
+			</http:request>
+			<set-payload
+				value="#[output application/json&#10;&#10;---&#10;&#10;payload]"
+				doc:name="Set Payload" doc:id="4628ae0a-3de5-47cc-b60b-973360edd1ef" />
+			<error-handler>
+				<on-error-propagate enableNotifications="true"
+					logException="true" doc:name="On Error Propagate"
+					doc:id="b54661c9-fcf4-4da4-bf7b-81a413b92780">
+					<email:send doc:name="Error when get budget information"
+						doc:id="fffd60c5-f9c5-474d-90f8-5b98cebdd365"
+						config-ref="Email_IAMP_Sender" fromAddress="${HR_EMAIL}"
+						subject="Expense report error">
+						<email:to-addresses>
+							<email:to-address value="${HR_EMAIL}" />
+						</email:to-addresses>
+						<email:body contentType="text/plain" encoding="UTF-8">
+							<email:content><![CDATA[#[output application/json
+---
+"Error when update USA budget"]]]></email:content>
+						</email:body>
+					</email:send>
+					<raise-error doc:name="Raise error"
+						doc:id="2fc785ba-2e0b-43fa-a8ea-39e989f06dab"
+						type="ERROR:UPDATE_BUDGET_INFO" />
+				</on-error-propagate>
+			</error-handler>
+		</try>
+	</flow>
+	<flow name="AddJapanBudgetSystemAPI"
+		doc:id="23b12c31-68bb-4f6e-97c2-46eb2972e866">
+		<http:listener doc:name="Listener"
+			doc:id="4ca72271-06bc-4348-adac-94b4bc70b581"
+			config-ref="Experience_HTTP_Listener_config" path="/add/budget"
+			allowedMethods="POST">
+			<http:response>
+				<http:headers><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "application/json"
+}]]]></http:headers>
+			</http:response>
+		</http:listener>
+		<try doc:name="Try" doc:id="4e8892e9-d753-45be-b6bf-6b20cc1eaa41">
+			<http:request method="POST"
+				doc:name="Add budget information"
+				doc:id="d8478420-e537-452d-83fb-df361e1a4152"
+				config-ref="HTTP_Request_Financial_System_JP" path="/add/budget">
+				<http:body><![CDATA[#[output application/json
+---
+{year:now().year + 1, amount: payload}]]]></http:body>
+				<http:response-validator>
+					<http:success-status-code-validator
+						values="200" />
+				</http:response-validator>
+			</http:request>
+			<set-payload
+				value="#[output application/json&#10;&#10;---&#10;&#10;payload]"
+				doc:name="Set Payload" doc:id="1806281d-40b1-4ce1-9f01-75861ccc3fe7" />
+			<error-handler>
+				<on-error-propagate enableNotifications="true"
+					logException="true" doc:name="On Error Propagate"
+					doc:id="e8f6465c-c8d9-4f64-b4a5-a2500a5db096">
+					<email:send doc:name="Error when get budget information"
+						doc:id="61be3e42-ae4e-4850-9a75-dba2b878f9ed"
+						config-ref="Email_IAMP_Sender" fromAddress="${HR_EMAIL}"
+						subject="Expense report error">
+						<email:to-addresses>
+							<email:to-address value="${HR_EMAIL}" />
+						</email:to-addresses>
+						<email:body contentType="text/plain" encoding="UTF-8">
+							<email:content><![CDATA[#[output application/json
+---
+"Error when get Japan budget information"]]]></email:content>
+						</email:body>
+					</email:send>
+					<raise-error doc:name="Raise error"
+						doc:id="3192aee5-44d6-41bc-89e2-6dcf8bf12d83"
+						type="ERROR:ADD_JAPAN_BUDGET" />
+				</on-error-propagate>
+			</error-handler>
+		</try>
+	</flow>
+</mule>

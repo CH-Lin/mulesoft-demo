@@ -1,0 +1,384 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="test-suite-SchedulerFlowEntry.xml" />
+	<munit:test
+		name="SchedulerFlowTest-ERROR:SEND_PAYMENT_REQUEST_ERROR"
+		doc:id="6b6886ce-41b0-42b3-8f8d-9dda0937481e" description="Test">
+		<munit:behavior>
+			<munit-tools:mock-when
+				doc:name="Mock when scheduler is triggered"
+				doc:id="43eeb323-b204-47c6-8d16-4fd0721cce50" processor="scheduler">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="Scheduler" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value='#["START"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when process email request"
+				doc:id="2834dd2b-7b18-4f23-b5d9-1696c5cc182c"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/email" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value='#["SKIP"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when process expense request"
+				doc:id="ad3e5f0a-2fd5-4323-bf54-5c725406b6ad"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/expense" attributeName="path" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when process payment request"
+				doc:id="c7827498-a977-4773-b11d-8927f844dfb0"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/payment" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:error
+						typeId="ERROR:SEND_PAYMENT_REQUEST_ERROR" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="AutoPaymentExperience"
+				doc:id="c2a49036-ba36-417a-ad9f-e8741bcf1a8c"
+				name="AutoPaymentExperience" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that
+				doc:name="Assert that" doc:id="0c385f7e-97bc-4e05-a0c5-2ce8d98f931a"
+				expression="#[payload]"
+				is='#[MunitTools::equalToIgnoringCase("ERROR:SEND_PAYMENT_REQUEST_ERROR")]' />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="SchedulerFlowTest-ERROR:GET_SALARY_INFO"
+		doc:id="95d9eb41-ee8e-418b-a7c7-e4c83a5ee44c" description="Test">
+		<munit:behavior>
+			<munit-tools:mock-when
+				doc:name="Mock when scheduler is triggered"
+				doc:id="eb92538d-f99c-4803-bfb3-ad18070df0fd" processor="scheduler">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="Scheduler" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value='#["START"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when process email request"
+				doc:id="7d9cb5f8-5a7c-4662-b07e-4f7fdba5b34b"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/email" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value='#["SKIP"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when process expense reuqest"
+				doc:id="ff32eb7b-1e7f-4880-a665-6c6cc89c9294"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/expense" attributeName="path" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when process payment request"
+				doc:id="edfa983f-75c3-4c1a-9701-c0ac484d91d5"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/payment" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:error typeId="ERROR:GET_SALARY_INFO" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="AutoPaymentExperience"
+				doc:id="ccbcd18d-109c-460f-a4ec-5040f9ece87e"
+				name="AutoPaymentExperience" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that
+				doc:name="Assert that" doc:id="5dcb5fd7-7726-4183-9873-7f2f6d3cbb22"
+				expression="#[payload]"
+				is='#[MunitTools::equalToIgnoringCase("ERROR:GET_SALARY_INFO")]' />
+		</munit:validation>
+	</munit:test>
+	<munit:test
+		name="SchedulerFlowTest-ERROR:GET_REIMBURSEMENT_INFO"
+		doc:id="51b79b62-bda4-4c76-8b7d-78c841c69619" description="Test">
+		<munit:behavior>
+			<munit-tools:mock-when
+				doc:name="Mock when scheduler is triggered"
+				doc:id="3291d276-7ce9-4b17-9b4d-6e87f81d552f" processor="scheduler">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="Scheduler" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value='#["START"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when process email request"
+				doc:id="dcfa2831-1b70-4b59-90a8-9e4ba2e58e46"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/email" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value='#["SKIP"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when process expense request"
+				doc:id="e941565c-323d-40b4-8a5f-6ba17f4009e6"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/expense" attributeName="path" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when process payment request"
+				doc:id="5d04b9f0-c21e-4989-b53e-91287d3f1232"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/payment" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:error
+						typeId="ERROR:GET_REIMBURSEMENT_INFO" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="AutoPaymentExperience"
+				doc:id="bf96e3d3-9d6f-4a0e-9b5d-dcc489cceb79"
+				name="AutoPaymentExperience" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that
+				doc:name="Assert that" doc:id="26f205e3-35b1-4791-8da3-ccf43dc65604"
+				expression="#[payload]"
+				is='#[MunitTools::equalToIgnoringCase("ERROR:GET_REIMBURSEMENT_INFO")]' />
+		</munit:validation>
+	</munit:test>
+	<munit:test
+		name="SchedulerFlowEntryTest-EMAIL:CONNECTIVITY-Error"
+		doc:id="78fef0cd-848b-4500-a007-d2ce4a3990a9">
+		<munit:behavior>
+			<munit-tools:mock-when
+				doc:name="Mock when scheduler is triggered"
+				doc:id="ada762a5-90d3-4872-960b-d12f3f2c7002" processor="scheduler">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="Scheduler" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value='#["START"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when process email request"
+				doc:id="8ce81155-eb76-4416-b29a-4dc237a80b18"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/email" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:error
+						typeId="#['EMAIL:CONNECTIVITY']" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="AutoPaymentExperience"
+				doc:id="7b8772aa-4bbf-471a-9244-a75d1e43cff5"
+				name="AutoPaymentExperience" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that
+				doc:name="Assert that" doc:id="43eb4a31-3a3f-4d8e-ad98-823af13c8ef1"
+				is='#[MunitTools::equalToIgnoringCase("EMAIL:CONNECTIVITY")]'
+				expression="#[payload]" />
+		</munit:validation>
+	</munit:test>
+	<munit:test
+		name="SchedulerFlowEntryTest-EMAIL:INVALID_CREDENTIALS-Error"
+		doc:id="d475022c-2a6b-4942-b4cd-f720a5ecff70">
+		<munit:behavior>
+			<munit-tools:mock-when
+				doc:name="Mock when scheduler is triggered"
+				doc:id="876f118c-87a3-42b4-b57d-7a54dece62cc" processor="scheduler">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="Scheduler" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value='#["START"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when process email request"
+				doc:id="bea993f9-3a23-4adf-8190-af045ded8117"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/email" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:error
+						typeId="#['EMAIL:INVALID_CREDENTIALS']" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="AutoPaymentExperience"
+				doc:id="59652b34-025d-4077-93ef-6633ba60a58d"
+				name="AutoPaymentExperience" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that
+				doc:name="Assert that" doc:id="1a80be4b-dae3-4d4f-8078-c8a70e13c794"
+				is='#[MunitTools::equalToIgnoringCase("EMAIL:INVALID_CREDENTIALS")]'
+				expression="#[payload]" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="SchedulerFlowEntryTest"
+		doc:id="7ad06840-1bb4-425f-8a7d-58e39cb92452">
+		<munit:behavior>
+			<munit-tools:mock-when
+				doc:name="Mock when scheduler is triggered"
+				doc:id="661c99bc-5bf1-4f72-853d-999b99c972c3" processor="scheduler">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="Scheduler" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value='#["START"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when process email request"
+				doc:id="49523c6e-c607-4a42-be50-e27e78e6b863"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/email" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload
+						value='#["HR system updated"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when process expense request"
+				doc:id="e8557d5f-bd53-40ce-8669-97f244c3188c"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/expense" attributeName="path" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when process payment request"
+				doc:id="28453d8b-dacf-4b21-a1aa-bcefcaec2c63"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/payment" attributeName="path" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload
+						value='#["Payment process successed"]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when
+				doc:name="Mock when email notification"
+				doc:id="915786c0-e311-499d-9725-a9dddb7d13a2" processor="email:send">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="Email_IAMP_Sender" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="AutoPaymentExperience"
+				doc:id="a489767f-eecb-4f70-aed8-18a2288390e8"
+				name="AutoPaymentExperience" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that
+				doc:name="Assert that" doc:id="1d07f370-bda7-4f98-9ad7-3f2efd8ef1ef"
+				expression="#[payload]"
+				is='#[MunitTools::containsString("Payment process successed")]' />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="test-suite-BudgetExperienceTest"
+		doc:id="d3a5ae4d-4df7-4d56-baef-648164e85426">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="237e6af1-983f-4f61-947a-7f885edf8ad6"
+				processor="http:listener">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="Experience_HTTP_Listener_config"
+						attributeName="config-ref" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="c01ec2ee-535e-4b92-b392-2286a147cb91"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/budget/calculate" attributeName="path" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when"
+				doc:id="4d706499-8f69-4df6-ac0a-46624870e72a"
+				processor="http:request">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="/budget/update" attributeName="path" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="BudgetExperience"
+				doc:id="183e1584-81dc-40b4-b7ac-74cceaba23bd"
+				name="BudgetExperience" />
+		</munit:execution>
+	</munit:test>
+</mule>

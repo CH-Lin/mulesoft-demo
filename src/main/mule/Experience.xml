@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+        http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<configuration-properties
+		file="config.properties" />
+	<flow name="ReimbursementExperience"
+		doc:id="a4435b20-cb50-45f1-989f-b6781b936cb9">
+		<http:listener doc:name="Listener"
+			doc:id="85c68ab2-26ae-4bd4-be00-dff129bf1964"
+			config-ref="Experience_HTTP_Listener_config" path="/reimbursement"
+			allowedMethods="POST" />
+		<http:request method="POST"
+			doc:name="Process Email Request"
+			doc:id="665fcfe8-f983-454c-9a12-e2a0cf4ef803"
+			config-ref="HTTP_Process_Request_configuration" path="/email"
+			responseTimeout="30000">
+			<reconnect-forever />
+			<http:response-validator>
+				<http:success-status-code-validator
+					values="200" />
+			</http:response-validator>
+		</http:request>
+		<error-handler ref="entryError_Handler" />
+	</flow>
+	<flow name="PaymentExperience"
+		doc:id="2655fd20-19ca-4565-a0d1-9fb39871a1a1">
+		<http:listener doc:name="Listener"
+			doc:id="e7874a05-5a71-4a31-ae0c-a375c292de3c"
+			config-ref="Experience_HTTP_Listener_config" path="/payment"
+			allowedMethods="PATCH">
+			<http:response statusCode="200">
+				<http:headers><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "application/json"
+}]]]></http:headers>
+			</http:response>
+		</http:listener>
+		<http:request method="POST"
+			doc:name="Process Payment Request"
+			doc:id="56dc0f60-01d4-4dbd-8d4e-31b9b7b5f13b"
+			config-ref="HTTP_Process_Request_configuration"
+			path="/payment/process" />
+		<error-handler ref="entryError_Handler" />
+	</flow>
+	<flow name="AutoPaymentExperience"
+		doc:id="b25f0894-dc0d-4e91-9897-54f233f8c116">
+		<scheduler doc:name="Scheduler"
+			doc:id="33428a52-f982-41eb-81da-b827e59583b0">
+			<scheduling-strategy>
+				<cron expression="0 58 18 * * ?" />
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="Logger"
+			doc:id="e353d98a-4ea5-4763-8cdb-3bdd4872ea8e"
+			message='#["Expense report and payment are processing on " ++ now()]' />
+		<http:request method="POST"
+			doc:name="Process Email Request"
+			doc:id="92e8e26e-d817-4743-9ec2-47925702136c"
+			config-ref="HTTP_Process_Request_configuration" path="/email" />
+		<http:request method="POST"
+			doc:name="Process Expense Request"
+			doc:id="202e3625-8278-477f-a257-a745f0a60f87"
+			config-ref="HTTP_Process_Request_configuration" path="/expense">
+			<http:headers><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "application/json"
+}]]]></http:headers>
+		</http:request>
+		<http:request method="POST"
+			doc:name="Process Payment Request"
+			doc:id="8f4d9dfa-972c-4a2b-8d86-89e06fafac9e"
+			config-ref="HTTP_Process_Request_configuration" path="/payment" />
+		<email:send
+			doc:name="Notify reimbursement processing and payment processing are done"
+			doc:id="1c5f7251-4e0f-4ec8-9254-85acc89b944f"
+			config-ref="Email_IAMP_Sender" fromAddress="${HR_EMAIL}"
+			subject="Expense report and payment are processed">
+			<email:to-addresses>
+				<email:to-address value="${HR_EMAIL}" />
+			</email:to-addresses>
+			<email:body contentType="text/plain" encoding="UTF-8">
+				<email:content><![CDATA[#[output application/json
+---
+"Expense report and payment are processed on " ++ now()]]]></email:content>
+			</email:body>
+		</email:send>
+		<error-handler ref="entryError_Handler" />
+	</flow>
+	<flow name="BudgetExperience"
+		doc:id="dee486b6-05d8-475a-9936-9a9c5fc33b3b">
+		<http:listener doc:name="Listener"
+			doc:id="309e1c7a-b0e1-4733-977f-2d48d701d194"
+			config-ref="Experience_HTTP_Listener_config" path="/budget/balance"
+			allowedMethods="PATCH">
+			<http:response>
+				<http:headers><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "application/json"
+}]]]></http:headers>
+			</http:response>
+		</http:listener>
+		<http:request method="GET"
+			doc:name="Calculate budget request"
+			doc:id="dd072779-da87-4e89-9bfd-b3f469a73b64"
+			config-ref="HTTP_Process_Request_configuration"
+			path="/budget/calculate" />
+		<http:request method="PATCH"
+			doc:name="Update budget request"
+			doc:id="55619e7b-9583-4f62-afc7-800fcd6a0e4d"
+			config-ref="HTTP_Process_Request_configuration" path="/budget/update" />
+		<error-handler ref="entryError_Handler" />
+	</flow>
+	<error-handler name="entryError_Handler"
+		doc:id="efe2920a-f6a1-470d-94e3-3c774baf0a65">
+		<on-error-continue enableNotifications="true"
+			logException="true" doc:name="On Error Continue"
+			doc:id="22ec22eb-2bae-4497-bed5-8cac69b4c31e"
+			type="EMAIL:INVALID_CREDENTIALS">
+			<logger level="INFO" doc:name="Logger"
+				doc:id="6bf53a38-21cb-4417-bae0-526ba7645f3c"
+				message="IMAP access is not enabled" />
+			<set-payload value='#["EMAIL:INVALID_CREDENTIALS"]'
+				doc:name="Set payload" doc:id="5e26a86e-40a5-49d2-81d6-d4ba38d8f9e7" />
+		</on-error-continue>
+		<on-error-continue enableNotifications="true"
+			logException="true" doc:name="On Error Continue"
+			doc:id="d48d01b3-7a2c-478d-b463-ad5d24fa895e"
+			type="EMAIL:CONNECTIVITY">
+			<logger level="INFO" doc:name="Logger"
+				doc:id="bfce1f97-1d4b-471b-a91c-acb3b247c517"
+				message="Fetch emails fail" />
+			<set-payload value='#["EMAIL:CONNECTIVITY"]'
+				doc:name="Set payload" doc:id="35e07abd-2ec3-4b23-b4d3-2c820e4f5121" />
+		</on-error-continue>
+		<on-error-continue enableNotifications="true"
+			logException="true" doc:name="On Error Continue"
+			doc:id="9af568c1-61c3-45b4-8559-ca83f2558abf"
+			type="ERROR:SEND_PAYMENT_REQUEST_ERROR">
+			<logger level="INFO" doc:name="Logger"
+				doc:id="d0d57708-1436-408a-9979-17ddcb8eeefd"
+				message="Send payment request fail" />
+			<set-payload
+				value='#["ERROR:SEND_PAYMENT_REQUEST_ERROR"]' doc:name="Set payload"
+				doc:id="0d6216d4-ba84-4429-8e1a-7973b8678a59" />
+		</on-error-continue>
+		<on-error-continue enableNotifications="true"
+			logException="true" doc:name="On Error Continue"
+			doc:id="421508ee-4512-49f6-b2f4-a5381803f1b7"
+			type="ERROR:GET_REIMBURSEMENT_INFO">
+			<logger level="INFO" doc:name="Logger"
+				doc:id="857dd97d-1caf-480e-93d6-755c88bcbb7b"
+				message="Get reimbursement information fail" />
+			<set-payload value='#["ERROR:GET_REIMBURSEMENT_INFO"]'
+				doc:name="Set Payload" doc:id="d6627a08-ea89-4a89-9718-b60e582ebf71" />
+		</on-error-continue>
+		<on-error-continue enableNotifications="true"
+			logException="true" doc:name="On Error Continue"
+			doc:id="8e6fd0ae-6222-409b-8fdd-375beda3524b"
+			type="ERROR:GET_SALARY_INFO">
+			<logger level="INFO" doc:name="Logger"
+				doc:id="57bf45fd-acd4-466e-8b47-c50e3be476ea"
+				message="Get salary information fail" />
+			<set-payload value='#["ERROR:GET_SALARY_INFO"]'
+				doc:name="Set Payload" doc:id="e08a7809-0a18-4f5f-bd6f-e0c391ee19f1" />
+		</on-error-continue>
+	</error-handler>
+</mule>
